@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/exam_config_controller.dart';
 import '../../core/theme/theme.dart';
+import '../../data/models/exam_models.dart';
+import '../quiz/quiz_screen.dart';
 
 class ConfigScreen extends StatefulWidget {
-  const ConfigScreen({super.key});
+  const ConfigScreen({
+    super.key,
+    this.initialConfig = const ExamConfigRequest(),
+  });
+
+  final ExamConfigRequest initialConfig;
 
   @override
   State<ConfigScreen> createState() => _ConfigScreenState();
@@ -14,43 +23,55 @@ class _ConfigScreenState extends State<ConfigScreen> {
   static const Color _divider = Color(0xFF3A3A3C);
   static const Color _subtitleColor = Color(0xFFC7C7CC);
 
-  bool _autoNext = false;
-  bool _scoreAfterSubmit = true;
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _screenBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionLabel('THÔNG TIN BÀI THI'),
-                    _buildInfoCard(),
-                    _buildSectionLabel('CHẾ ĐỘ CHẤM ĐIỂM BÀI THI'),
-                    _buildScoringCard(),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text(
-                        '• Ứng dụng sẽ chấm điểm và hiển thị kết quả sau khi bạn nộp bài thi.\n• Chế độ này tương tự khi thi sát hạch và phù hợp để luyện tập thi thử.',
-                        style: AppTextStyles.caption.copyWith(color: _subtitleColor),
+    return ChangeNotifierProvider(
+      create: (_) {
+        final controller = ExamConfigController();
+        controller.setTotalQuestions(widget.initialConfig.totalQuestions);
+        controller.setCriticalQuestions(widget.initialConfig.criticalQuestions);
+        controller
+            .setQuestionsWithImages(widget.initialConfig.questionsWithImages);
+        return controller;
+      },
+      child: Consumer<ExamConfigController>(
+        builder: (context, controller, _) {
+          return Scaffold(
+            backgroundColor: _screenBg,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionLabel('THÔNG TIN BÀI THI'),
+                          _buildInfoCard(controller),
+                          _buildSectionLabel('CHẾ ĐỘ CHẤM ĐIỂM BÀI THI'),
+                          _buildScoringCard(controller),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                            child: Text(
+                              '• Ứng dụng sẽ chấm điểm và hiển thị kết quả sau khi bạn nộp bài thi.\n• Chế độ này tương tự khi thi sát hạch và phù hợp để luyện tập thi thử.',
+                              style: AppTextStyles.caption
+                                  .copyWith(color: _subtitleColor),
+                            ),
+                          ),
+                          _buildSectionLabel('TÙY CHỈNH'),
+                          _buildToggleCard(controller),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
-                    _buildSectionLabel('TÙY CHỈNH'),
-                    _buildToggleCard(),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                  ),
+                  _buildStartButton(context, controller),
+                ],
               ),
             ),
-            _buildStartButton(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -77,12 +98,12 @@ class _ConfigScreenState extends State<ConfigScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
       child: Text(label,
-          style: AppTextStyles.label.copyWith(
-              fontSize: 13, color: const Color(0xFFC7C7CC))),
+          style: AppTextStyles.label
+              .copyWith(fontSize: 13, color: const Color(0xFFC7C7CC))),
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(ExamConfigController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -92,7 +113,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow('Số lượng câu hỏi', '30 câu'),
+          _buildInfoRow('Số lượng câu hỏi', '${controller.totalQuestions} câu'),
           _buildDivider(),
           _buildInfoRow('Điểm đạt tối thiểu', '27/30 câu'),
           _buildDivider(),
@@ -127,7 +148,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  Widget _buildScoringCard() {
+  Widget _buildScoringCard(ExamConfigController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -140,9 +161,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Chấm điểm sau khi nộp bài',
+              const Text('Chấm điểm sau khi nộp bài',
                   style: AppTextStyles.bodyLg),
-              if (_scoreAfterSubmit)
+              if (controller.scoreAfterSubmit)
                 const Icon(Icons.check, color: AppColors.primary, size: 20),
             ],
           ),
@@ -151,8 +172,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
             child: Container(height: 1, color: _divider),
           ),
           GestureDetector(
-            onTap: () => setState(() => _scoreAfterSubmit = false),
-            child: Row(
+            onTap: () => controller.setScoreAfterSubmit(false),
+            child: const Row(
               children: [
                 Text('Chấm điểm nhanh khi chọn đáp án',
                     style: AppTextStyles.bodyLg),
@@ -164,7 +185,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  Widget _buildToggleCard() {
+  Widget _buildToggleCard(ExamConfigController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -175,10 +196,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Tự động chuyển câu', style: AppTextStyles.bodyLg),
+          const Text('Tự động chuyển câu', style: AppTextStyles.bodyLg),
           Switch(
-            value: _autoNext,
-            onChanged: (v) => setState(() => _autoNext = v),
+            value: controller.autoNext,
+            onChanged: controller.setAutoNext,
             activeColor: AppColors.primary,
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: const Color(0xFF636366),
@@ -188,13 +209,23 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  Widget _buildStartButton() {
+  Widget _buildStartButton(
+    BuildContext context,
+    ExamConfigController controller,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Column(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuizScreen(config: controller.request),
+                ),
+              );
+            },
             child: Container(
               height: 52,
               decoration: BoxDecoration(

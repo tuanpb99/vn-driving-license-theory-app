@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/home_controller.dart';
+import '../../core/navigation/app_tab_navigation.dart';
 import '../../core/theme/theme.dart';
+import '../../data/models/statistics_model.dart';
+import '../../data/repositories/question_repository.dart';
+import '../../widgets/app_bottom_nav_bar.dart';
 import '../exam/thi_thu_screen.dart';
 import '../road_signs/road_signs_screen.dart';
 import '../saved/saved_questions_screen.dart';
 import '../settings/settings_screen.dart';
-import 'license_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,76 +19,181 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedTab = 0;
-
   static const Color _cardBg = Color(0xFF2C2C2E);
   static const Color _screenBg = Color(0xFF1C1C1E);
   static const Color _subtitleColor = Color(0xFFC7C7CC);
 
   final List<_QuickItem> _quickItems = const [
-    _QuickItem(icon: Icons.timer_rounded, label: 'THI THỬ', color: Color(0xFF4A9FD8)),
-    _QuickItem(icon: Icons.bookmark_rounded, label: 'ĐÃ LƯU', color: Color(0xFF30D158)),
-    _QuickItem(icon: Icons.close_rounded, label: 'CÂU SAI', color: Color(0xFFFF453A)),
-    _QuickItem(icon: Icons.star_rounded, label: 'CÂU KHÓ', color: Color(0xFFFFD60A)),
-    _QuickItem(icon: Icons.route_rounded, label: 'SA HÌNH', color: Color(0xFF4A9FD8)),
-    _QuickItem(icon: Icons.lightbulb_rounded, label: 'MẸO', color: Color(0xFF30D158)),
-    _QuickItem(icon: Icons.signpost_rounded, label: 'BIỂN BÁO', color: Color(0xFFFF453A)),
-    _QuickItem(icon: Icons.question_answer_rounded, label: 'HỎI ĐÁP', color: Color(0xFF3A3A3C)),
+    _QuickItem(
+        icon: Icons.timer_rounded, label: 'THI THỬ', color: Color(0xFF4A9FD8)),
+    _QuickItem(
+        icon: Icons.bookmark_rounded,
+        label: 'ĐÃ LƯU',
+        color: Color(0xFF30D158)),
+    _QuickItem(
+        icon: Icons.close_rounded, label: 'CÂU SAI', color: Color(0xFFFF453A)),
+    _QuickItem(
+        icon: Icons.star_rounded, label: 'CÂU KHÓ', color: Color(0xFFFFD60A)),
+    _QuickItem(
+        icon: Icons.route_rounded, label: 'SA HÌNH', color: Color(0xFF4A9FD8)),
+    _QuickItem(
+        icon: Icons.lightbulb_rounded, label: 'MẸO', color: Color(0xFF30D158)),
+    _QuickItem(
+        icon: Icons.signpost_rounded,
+        label: 'BIỂN BÁO',
+        color: Color(0xFFFF453A)),
+    _QuickItem(
+        icon: Icons.question_answer_rounded,
+        label: 'HỎI ĐÁP',
+        color: Color(0xFF3A3A3C)),
   ];
 
   final List<_TopicItem> _topics = const [
-    _TopicItem(emoji: '🔥', title: 'Câu hỏi điểm liệt', count: '60 câu hỏi', progress: 0.17, color: Color(0xFFFF453A)),
-    _TopicItem(emoji: '🎯', title: 'Khái niệm và quy tắc', count: '180 câu hỏi', progress: 0.33, color: Color(0xFF4A9FD8)),
-    _TopicItem(emoji: '👤', title: 'Văn hoá và đạo đức', count: '25 câu hỏi', progress: 0.11, color: Color(0xFF30D158)),
-    _TopicItem(emoji: '🚗', title: 'Kỹ thuật lái xe', count: '58 câu hỏi', progress: 0.22, color: Color(0xFFFF9F0A)),
-    _TopicItem(emoji: '🔧', title: 'Cấu tạo và sửa chữa', count: '37 câu hỏi', progress: 0.14, color: Color(0xFFBF5AF2)),
-    _TopicItem(emoji: '⚠️', title: 'Biển báo đường bộ', count: '185 câu hỏi', progress: 0.36, color: Color(0xFFFFD60A)),
+    _TopicItem(
+        emoji: '🔥',
+        title: 'Câu hỏi điểm liệt',
+        count: '60 câu hỏi',
+        progress: 0.17,
+        color: Color(0xFFFF453A)),
+    _TopicItem(
+        emoji: '🎯',
+        title: 'Khái niệm và quy tắc',
+        count: '180 câu hỏi',
+        progress: 0.33,
+        color: Color(0xFF4A9FD8)),
+    _TopicItem(
+        emoji: '👤',
+        title: 'Văn hoá và đạo đức',
+        count: '25 câu hỏi',
+        progress: 0.11,
+        color: Color(0xFF30D158)),
+    _TopicItem(
+        emoji: '🚗',
+        title: 'Kỹ thuật lái xe',
+        count: '58 câu hỏi',
+        progress: 0.22,
+        color: Color(0xFFFF9F0A)),
+    _TopicItem(
+        emoji: '🔧',
+        title: 'Cấu tạo và sửa chữa',
+        count: '37 câu hỏi',
+        progress: 0.14,
+        color: Color(0xFFBF5AF2)),
+    _TopicItem(
+        emoji: '⚠️',
+        title: 'Biển báo đường bộ',
+        count: '185 câu hỏi',
+        progress: 0.36,
+        color: Color(0xFFFFD60A)),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _screenBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildStatusBar(),
-            _buildNavBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildProBanner(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildMenuCard(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildProgressCard(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildAdBanner(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildSectionHeader('Ôn tập theo chủ đề'),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildTopicCard(_topics[0]),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildSectionHeader('HỌC TẬP THEO CHỦ ĐỀ'),
-                    const SizedBox(height: AppSpacing.sm),
-                    ..._topics.map((t) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: _buildTopicCard(t),
-                        )),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-                ),
+    return ChangeNotifierProvider(
+      create: (context) =>
+          HomeController(context.read<QuestionRepository>())..loadStatistics(),
+      child: Consumer<HomeController>(
+        builder: (context, controller, _) {
+          final topics = _topicsFromStatistics(controller.statistics);
+          return Scaffold(
+            backgroundColor: _screenBg,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildStatusBar(),
+                  _buildNavBar(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildProBanner(),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildMenuCard(),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildProgressCard(controller),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildAdBanner(),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildSectionHeader('Ôn tập theo chủ đề'),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTopicCard(topics[0]),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildSectionHeader('HỌC TẬP THEO CHỦ ĐỀ'),
+                          const SizedBox(height: AppSpacing.sm),
+                          ...topics.map((t) => Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm),
+                                child: _buildTopicCard(t),
+                              )),
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
+                      ),
+                    ),
+                  ),
+                  AppBottomNavBar(
+                    currentIndex: 0,
+                    onTabSelected: (index) =>
+                        AppTabNavigation.openTab(context, index, 0),
+                  ),
+                ],
               ),
             ),
-            _buildTabBar(),
-          ],
-        ),
+          );
+        },
       ),
     );
+  }
+
+  List<_TopicItem> _topicsFromStatistics(StatisticsModel? statistics) {
+    if (statistics == null) return _topics;
+
+    final colors = [
+      AppColors.accentRed,
+      AppColors.primary,
+      AppColors.accentGreen,
+      AppColors.accentOrange,
+      const Color(0xFFBF5AF2),
+      AppColors.accentYellow,
+    ];
+    final icons = ['🔥', '🎯', '🚗', '🔧', '⚠️', '👤'];
+
+    return statistics.categoryBreakdown.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      return _TopicItem(
+        emoji: icons[index % icons.length],
+        title: _categoryTitle(item.category),
+        count: '${item.count} câu hỏi',
+        progress: statistics.total == 0 ? 0 : item.count / statistics.total,
+        color: colors[index % colors.length],
+      );
+    }).toList();
+  }
+
+  String _categoryTitle(String category) {
+    switch (category) {
+      case 'bien-bao':
+        return 'Biển báo đường bộ';
+      case 'khai-niem':
+        return 'Khái niệm và quy tắc';
+      case 'tinh-huong':
+        return 'Tình huống sa hình';
+      case 'ky-thuat':
+        return 'Kỹ thuật lái xe';
+      case 'cau-tao':
+        return 'Cấu tạo và sửa chữa';
+      case 'van-hoa':
+        return 'Văn hoá và đạo đức';
+      default:
+        if (category.contains('diem-liet')) {
+          return 'Câu hỏi điểm liệt';
+        }
+        return category;
+    }
   }
 
   Widget _buildStatusBar() {
@@ -153,8 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                    const Text('Phiên bản Pro',
-                        style: AppTextStyles.label),
+                    const Text('Phiên bản Pro', style: AppTextStyles.label),
                     const SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -164,29 +273,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text('50%',
-                          style: AppTextStyles.labelSm
-                              .copyWith(fontSize: 10)),
+                          style: AppTextStyles.labelSm.copyWith(fontSize: 10)),
                     ),
                   ],
                 ),
                 Text('Loại bỏ quảng cáo, hỗ trợ OTOMOTO',
-                    style: AppTextStyles.caption
-                        .copyWith(color: _subtitleColor)),
+                    style:
+                        AppTextStyles.caption.copyWith(color: _subtitleColor)),
               ],
             ),
           ),
           Container(
             height: 52,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(AppSpacing.r12),
             ),
             alignment: Alignment.center,
             child: Text('Nâng cấp',
-                style: AppTextStyles.label
-                    .copyWith(fontSize: 13)),
+                style: AppTextStyles.label.copyWith(fontSize: 13)),
           ),
         ],
       ),
@@ -244,20 +350,28 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onQuickItemTap(String label) {
     switch (label) {
       case 'THI THỬ':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ThiThuScreen()));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const ThiThuScreen()));
         break;
       case 'ĐÃ LƯU':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedQuestionsScreen()));
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SavedQuestionsScreen()));
         break;
       case 'BIỂN BÁO':
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RoadSignsScreen()));
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const RoadSignsScreen()));
         break;
       default:
         break;
     }
   }
 
-  Widget _buildProgressCard() {
+  Widget _buildProgressCard(HomeController controller) {
+    final statistics = controller.statistics;
+    final summary = statistics == null
+        ? '600 câu / 32 đề thi'
+        : '${statistics.total} câu / ${statistics.totalCategories} nhóm';
+
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: AppSpacing.lg),
@@ -293,21 +407,18 @@ class _HomeScreenState extends State<HomeScreen> {
               value: 0.46,
               minHeight: 8,
               backgroundColor: Color(0xFF3A3A3C),
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('600 câu / 32 đề thi',
-                  style: AppTextStyles.caption
-                      .copyWith(color: _subtitleColor)),
-              Text('...',
+              Text(summary,
+                  style: AppTextStyles.caption.copyWith(color: _subtitleColor)),
+              Text(controller.isLoading ? '...' : 'API',
                   style: AppTextStyles.bodyLg.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700)),
+                      color: AppColors.primary, fontWeight: FontWeight.w700)),
             ],
           ),
         ],
@@ -334,8 +445,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: AppTextStyles.label
                         .copyWith(fontWeight: FontWeight.w700)),
                 Text('Tải app ngay hôm nay!',
-                    style: AppTextStyles.caption
-                        .copyWith(color: _subtitleColor)),
+                    style:
+                        AppTextStyles.caption.copyWith(color: _subtitleColor)),
               ],
             ),
           ),
@@ -378,12 +489,11 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Text(topic.emoji,
-                  style: const TextStyle(fontSize: 18)),
+              Text(topic.emoji, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: AppSpacing.sm),
               Text(topic.title,
-                  style: AppTextStyles.label.copyWith(
-                      fontSize: 15, fontWeight: FontWeight.w700)),
+                  style: AppTextStyles.label
+                      .copyWith(fontSize: 15, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 6),
@@ -398,73 +508,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(topic.count,
-              style: AppTextStyles.caption
-                  .copyWith(color: _subtitleColor)),
+              style: AppTextStyles.caption.copyWith(color: _subtitleColor)),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    const tabs = [
-      _TabItem(icon: Icons.menu_book_rounded, label: 'ÔN THI GPLX'),
-      _TabItem(icon: Icons.star_rounded, label: 'ĐÀO TẠO'),
-      _TabItem(icon: Icons.info_rounded, label: 'THÔNG TIN'),
-    ];
-
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      color: _cardBg,
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final selected = i == _selectedTab;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() => _selectedTab = i);
-                if (i == 1) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ThiThuScreen()));
-                } else if (i == 2) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: selected
-                      ? AppColors.bgCard
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(23),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      tabs[i].icon,
-                      color: selected
-                          ? AppColors.primary
-                          : const Color(0xFFAEAEB2),
-                      size: 18,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tabs[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 10,
-                        color: selected
-                            ? AppColors.primary
-                            : const Color(0xFFC7C7CC),
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
       ),
     );
   }
@@ -490,10 +535,4 @@ class _TopicItem {
       required this.count,
       required this.progress,
       required this.color});
-}
-
-class _TabItem {
-  final IconData icon;
-  final String label;
-  const _TabItem({required this.icon, required this.label});
 }

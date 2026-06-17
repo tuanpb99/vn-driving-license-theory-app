@@ -1,75 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../controllers/quiz_controller.dart';
 import '../../core/theme/theme.dart';
+import '../../data/models/exam_models.dart';
+import '../../data/models/question_model.dart';
+import '../../data/repositories/question_repository.dart';
 
-class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+class QuizScreen extends StatelessWidget {
+  const QuizScreen({
+    super.key,
+    this.config = const ExamConfigRequest(),
+  }) : isRandom = false;
 
-  @override
-  State<QuizScreen> createState() => _QuizScreenState();
-}
+  const QuizScreen.random({super.key})
+      : config = null,
+        isRandom = true;
 
-class _QuizScreenState extends State<QuizScreen> {
+  final ExamConfigRequest? config;
+  final bool isRandom;
+
   static const Color _cardBg = Color(0xFF2C2C2E);
   static const Color _screenBg = Color(0xFF1C1C1E);
   static const Color _optionBg = Color(0xFF2C2C2E);
 
-  int _currentQuestion = 0;
-  int? _selectedAnswer;
-  final int _totalQuestions = 35;
-
-  final List<_Question> _questions = const [
-    _Question(
-      text: 'Biển báo dưới đây có ý nghĩa gì?',
-      options: [
-        'Đường người đi bộ cắt ngang',
-        'Nơi đường bộ giao nhau cùng mức với đường sắt',
-        'Đường ưu tiên',
-        'Cấm đi ngược chiều',
-      ],
-      correctIndex: 1,
-      hasImage: true,
-      badge: 'Điểm liệt',
-    ),
-    _Question(
-      text: 'Tốc độ tối đa cho phép xe ô tô con đi trên đường cao tốc là bao nhiêu?',
-      options: ['80 km/h', '100 km/h', '120 km/h', '140 km/h'],
-      correctIndex: 2,
-      hasImage: false,
-      badge: null,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final q = _questions[_currentQuestion % _questions.length];
-    return Scaffold(
-      backgroundColor: _screenBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            _buildQuestionGrid(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildQuestionHeader(),
-                    _buildQuestionCard(q),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildAnswers(q),
-                  ],
-                ),
+    return ChangeNotifierProvider(
+      create: (context) {
+        final controller = QuizController(context.read<QuestionRepository>());
+        if (isRandom) {
+          controller.loadRandomQuestions();
+        } else {
+          controller.loadExam(config ?? const ExamConfigRequest());
+        }
+        return controller;
+      },
+      child: Consumer<QuizController>(
+        builder: (context, controller, _) {
+          if (controller.isLoading) {
+            return _buildStateScaffold(
+              child: const CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
+
+          if (controller.errorMessage != null ||
+              controller.currentQuestion == null) {
+            return _buildStateScaffold(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off_rounded,
+                      color: AppColors.accentRed, size: 40),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    controller.errorMessage ?? 'Không có câu hỏi nào',
+                    style: AppTextStyles.bodyLg,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  GestureDetector(
+                    onTap: () {
+                      if (isRandom) {
+                        controller.loadRandomQuestions();
+                      } else {
+                        controller
+                            .loadExam(config ?? const ExamConfigRequest());
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(AppSpacing.r12),
+                      ),
+                      child: const Text(
+                        'THỬ LẠI',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final question = controller.currentQuestion!;
+          return Scaffold(
+            backgroundColor: _screenBg,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(context),
+                  _buildQuestionGrid(controller),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildQuestionHeader(controller),
+                          _buildQuestionCard(question),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildAnswers(controller, question),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _buildBottomNav(controller),
+                ],
               ),
             ),
-            _buildBottomNav(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildStateScaffold({required Widget child}) {
+    return Scaffold(
+      backgroundColor: _screenBg,
+      body: SafeArea(
+        child: Center(child: child),
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -84,16 +145,14 @@ class _QuizScreenState extends State<QuizScreen> {
             children: [
               _buildTimerBar(),
               const SizedBox(width: AppSpacing.md),
-              Text('19:28',
-                  style: AppTextStyles.nav
-                      .copyWith(color: AppColors.primary)),
+              Text('20:00',
+                  style: AppTextStyles.nav.copyWith(color: AppColors.primary)),
             ],
           ),
           GestureDetector(
             onTap: () {},
             child: Text('Nộp bài',
-                style: AppTextStyles.bodyLg
-                    .copyWith(color: AppColors.primary)),
+                style: AppTextStyles.bodyLg.copyWith(color: AppColors.primary)),
           ),
         ],
       ),
@@ -105,67 +164,61 @@ class _QuizScreenState extends State<QuizScreen> {
       width: 120,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(3),
-        child: LinearProgressIndicator(
+        child: const LinearProgressIndicator(
           value: 0.6,
           minHeight: 6,
-          backgroundColor: const Color(0xFF3A3A3C),
-          valueColor:
-              const AlwaysStoppedAnimation<Color>(AppColors.primary),
+          backgroundColor: Color(0xFF3A3A3C),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
       ),
     );
   }
 
-  Widget _buildQuestionGrid() {
+  Widget _buildQuestionGrid(QuizController controller) {
+    final rows = <Widget>[];
+    for (var start = 1; start <= controller.totalQuestions; start += 15) {
+      final end = (start + 14).clamp(1, controller.totalQuestions);
+      rows.add(_buildGridRow(controller, start, end));
+      if (end < controller.totalQuestions) {
+        rows.add(const SizedBox(height: 4));
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      color: _cardBg,
-      child: Column(
-        children: [
-          _buildGridRow(1, 15),
-          const SizedBox(height: 4),
-          _buildGridRow(16, 30),
-        ],
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
+      color: _cardBg,
+      child: Column(children: rows),
     );
   }
 
-  Widget _buildGridRow(int start, int end) {
+  Widget _buildGridRow(QuizController controller, int start, int end) {
     return Row(
       children: List.generate(end - start + 1, (i) {
-        final num = start + i;
-        final isCurrent = num == _currentQuestion + 1;
+        final number = start + i;
+        final isCurrent = number == controller.currentIndex + 1;
         return Expanded(
           child: GestureDetector(
-            onTap: () => setState(() {
-              _currentQuestion = num - 1;
-              _selectedAnswer = null;
-            }),
+            onTap: () => controller.selectQuestion(number - 1),
             child: Container(
               height: 22,
               margin: const EdgeInsets.symmetric(horizontal: 2),
               decoration: BoxDecoration(
-                color: isCurrent
-                    ? Colors.transparent
-                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(4),
                 border: isCurrent
-                    ? Border.all(
-                        color: AppColors.primary, width: 1.5)
+                    ? Border.all(color: AppColors.primary, width: 1.5)
                     : null,
               ),
               child: Center(
                 child: Text(
-                  '$num',
+                  '$number',
                   style: AppTextStyles.caption.copyWith(
                     fontSize: 11,
-                    color: isCurrent
-                        ? AppColors.primary
-                        : const Color(0xFFAEAEB2),
-                    fontWeight: isCurrent
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    color:
+                        isCurrent ? AppColors.primary : const Color(0xFFAEAEB2),
+                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -176,16 +229,18 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _buildQuestionHeader() {
+  Widget _buildQuestionHeader(QuizController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Câu ${_currentQuestion + 1}',
-              style: AppTextStyles.body
-                  .copyWith(color: const Color(0xFFAEAEB2))),
+          Text('Câu ${controller.currentIndex + 1}',
+              style:
+                  AppTextStyles.body.copyWith(color: const Color(0xFFAEAEB2))),
           const Icon(Icons.bookmark_border_rounded,
               color: Color(0xFFAEAEB2), size: 20),
         ],
@@ -193,7 +248,7 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _buildQuestionCard(_Question q) {
+  Widget _buildQuestionCard(QuestionModel question) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -204,14 +259,15 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (q.badge != null) ...[
+          if (question.isCritical) ...[
             Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md, vertical: 6),
+                horizontal: AppSpacing.md,
+                vertical: 6,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.bgCard,
-                borderRadius:
-                    BorderRadius.circular(AppSpacing.rFull),
+                borderRadius: BorderRadius.circular(AppSpacing.rFull),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -219,47 +275,74 @@ class _QuizScreenState extends State<QuizScreen> {
                   const Icon(Icons.warning_amber_rounded,
                       color: AppColors.accentRed, size: 14),
                   const SizedBox(width: 4),
-                  Text(q.badge!,
+                  Text('Điểm liệt',
                       style: AppTextStyles.labelSm.copyWith(
-                          color: AppColors.accentRed,
-                          fontSize: 12)),
+                        color: AppColors.accentRed,
+                        fontSize: 12,
+                      )),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
           ],
-          Text(q.text,
-              style: AppTextStyles.bodyLg
-                  .copyWith(fontWeight: FontWeight.w500)),
-          if (q.hasImage) ...[
+          Text(question.question,
+              style:
+                  AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w500)),
+          if (question.hasImage) ...[
             const SizedBox(height: AppSpacing.lg),
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3A3A3C),
-                borderRadius: BorderRadius.circular(AppSpacing.r12),
-              ),
-              child: const Center(
-                child: Icon(Icons.image_rounded,
-                    color: Color(0xFF636366), size: 40),
-              ),
-            ),
+            _buildQuestionImage(question),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAnswers(_Question q) {
-    const labels = ['A', 'B', 'C', 'D'];
+  Widget _buildQuestionImage(QuestionModel question) {
+    final source = question.hinhanhq!;
+    if (source.startsWith('http')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.r12),
+        child: Image.network(
+          source,
+          height: 150,
+          width: double.infinity,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _buildImagePlaceholder(question),
+        ),
+      );
+    }
+    return _buildImagePlaceholder(question);
+  }
+
+  Widget _buildImagePlaceholder(QuestionModel question) {
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: const Color(0xFF3A3A3C),
+        borderRadius: BorderRadius.circular(AppSpacing.r12),
+      ),
+      child: Center(
+        child: Text(
+          question.hinhanhqAlt ?? 'Hình minh họa',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.caption.copyWith(color: const Color(0xFFAEAEB2)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnswers(QuizController controller, QuestionModel question) {
+    const labels = ['A', 'B', 'C', 'D', 'E'];
+    final selectedAnswer = controller.selectedAnswer;
+    final correctIndex = question.correctIndex;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
-        children: List.generate(q.options.length, (i) {
-          final isSelected = _selectedAnswer == i;
-          final isCorrect =
-              _selectedAnswer != null && i == q.correctIndex;
-          final isWrong = isSelected && i != q.correctIndex;
+        children: List.generate(question.answers.length, (i) {
+          final isSelected = selectedAnswer == i;
+          final isCorrect = selectedAnswer != null && i == correctIndex;
+          final isWrong = isSelected && i != correctIndex;
 
           Color borderColor = Colors.transparent;
           Color bgColor = _optionBg;
@@ -283,11 +366,7 @@ class _QuizScreenState extends State<QuizScreen> {
           }
 
           return GestureDetector(
-            onTap: () {
-              if (_selectedAnswer == null) {
-                setState(() => _selectedAnswer = i);
-              }
-            },
+            onTap: () => controller.selectAnswer(i),
             child: Container(
               margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -308,12 +387,14 @@ class _QuizScreenState extends State<QuizScreen> {
                     child: Center(
                       child: Text(labels[i],
                           style: AppTextStyles.labelSm.copyWith(
-                              fontSize: 13, color: labelColor)),
+                            fontSize: 13,
+                            color: labelColor,
+                          )),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(q.options[i],
+                    child: Text(question.answers[i].text,
                         style: AppTextStyles.body),
                   ),
                 ],
@@ -325,7 +406,7 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(QuizController controller) {
     return Container(
       height: 82,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
@@ -334,17 +415,18 @@ class _QuizScreenState extends State<QuizScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: _currentQuestion > 0
-                ? () => setState(() {
-                      _currentQuestion--;
-                      _selectedAnswer = null;
-                    })
+            onTap: controller.currentIndex > 0
+                ? controller.previousQuestion
                 : null,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: controller.currentIndex > 0
+                    ? AppColors.primary
+                    : const Color(0xFF3A3A3C),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Row(
@@ -353,24 +435,25 @@ class _QuizScreenState extends State<QuizScreen> {
                   SizedBox(width: 4),
                   Text('CÂU TRƯỚC',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700)),
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      )),
                 ],
               ),
             ),
           ),
-          const Icon(Icons.keyboard_arrow_up_rounded,
-              color: Colors.white, size: 24),
+          Text(
+            '${controller.currentIndex + 1}/${controller.totalQuestions}',
+            style: AppTextStyles.label.copyWith(color: Colors.white),
+          ),
           GestureDetector(
-            onTap: () => setState(() {
-              _currentQuestion =
-                  (_currentQuestion + 1) % _totalQuestions;
-              _selectedAnswer = null;
-            }),
+            onTap: controller.nextQuestion,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(20),
@@ -379,9 +462,10 @@ class _QuizScreenState extends State<QuizScreen> {
                 children: [
                   Text('CÂU SAU',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700)),
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      )),
                   SizedBox(width: 4),
                   Icon(Icons.chevron_right, color: Colors.white, size: 18),
                 ],
@@ -392,19 +476,4 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
-}
-
-class _Question {
-  final String text;
-  final List<String> options;
-  final int correctIndex;
-  final bool hasImage;
-  final String? badge;
-  const _Question({
-    required this.text,
-    required this.options,
-    required this.correctIndex,
-    required this.hasImage,
-    required this.badge,
-  });
 }

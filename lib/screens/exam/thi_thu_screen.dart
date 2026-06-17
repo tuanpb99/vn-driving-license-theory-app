@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../core/navigation/app_tab_navigation.dart';
 import '../../core/theme/theme.dart';
+import '../../data/models/exam_models.dart';
+import '../../widgets/app_bottom_nav_bar.dart';
+import '../quiz/quiz_screen.dart';
+import 'config_screen.dart';
 
 class ThiThuScreen extends StatefulWidget {
   const ThiThuScreen({super.key});
@@ -39,7 +44,11 @@ class _ThiThuScreenState extends State<ThiThuScreen> {
                 ),
               ),
             ),
-            _buildTabBar(),
+            AppBottomNavBar(
+              currentIndex: 1,
+              onTabSelected: (index) =>
+                  AppTabNavigation.openTab(context, index, 1),
+            ),
           ],
         ),
       ),
@@ -75,7 +84,8 @@ class _ThiThuScreenState extends State<ThiThuScreen> {
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.chevron_left, color: AppColors.primary, size: 28),
+            child: const Icon(Icons.chevron_left,
+                color: AppColors.primary, size: 28),
           ),
           const Expanded(
             child: Center(
@@ -104,7 +114,12 @@ class _ThiThuScreenState extends State<ThiThuScreen> {
 
   Widget _buildRandomCard() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const QuizScreen.random()),
+        );
+      },
       child: Container(
         height: 110,
         decoration: BoxDecoration(
@@ -140,7 +155,16 @@ class _ThiThuScreenState extends State<ThiThuScreen> {
 
   Widget _buildExamCard(String label) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ConfigScreen(
+              initialConfig: ExamConfigRequest(),
+            ),
+          ),
+        );
+      },
       child: Container(
         height: 110,
         decoration: BoxDecoration(
@@ -148,57 +172,9 @@ class _ThiThuScreenState extends State<ThiThuScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child: Text(label,
-              style: AppTextStyles.h2.copyWith(fontSize: 18)),
+          child: Text(label, style: AppTextStyles.h2.copyWith(fontSize: 18)),
         ),
       ),
     );
   }
-
-  Widget _buildTabBar() {
-    const tabs = [
-      _TabItem(icon: Icons.menu_book_rounded, label: 'ÔN THI GPLX'),
-      _TabItem(icon: Icons.star_rounded, label: 'ĐÀO TẠO'),
-      _TabItem(icon: Icons.info_rounded, label: 'THÔNG TIN'),
-    ];
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      color: _cardBg,
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final selected = i == 0;
-          return Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: selected ? AppColors.bgCard : Colors.transparent,
-                borderRadius: BorderRadius.circular(23),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(tabs[i].icon,
-                      color: selected ? AppColors.primary : const Color(0xFFAEAEB2),
-                      size: 18),
-                  const SizedBox(height: 4),
-                  Text(tabs[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 10,
-                        color: selected ? AppColors.primary : const Color(0xFFC7C7CC),
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      )),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _TabItem {
-  final IconData icon;
-  final String label;
-  const _TabItem({required this.icon, required this.label});
 }

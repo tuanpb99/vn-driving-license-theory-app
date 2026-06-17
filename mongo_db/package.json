@@ -1,0 +1,23 @@
+{
+  "name": "driving-license-db",
+  "version": "1.0.0",
+  "description": "Database setup and import for driving license questions",
+  "main": "import-data.js",
+  "scripts": {
+    "setup": "mongosh < mongodb-setup.js",
+    "import": "node import-data.js",
+    "setup-and-import": "npm run setup && npm run import",
+    "test-query": "node query-helper.js",
+    "stats": "node query-helper.js"
+  },
+  "keywords": [
+    "mongodb",
+    "driving-license",
+    "database"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}

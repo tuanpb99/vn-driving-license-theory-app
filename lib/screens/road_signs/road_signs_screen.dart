@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/navigation/app_tab_navigation.dart';
 import '../../core/theme/theme.dart';
+import '../../widgets/app_bottom_nav_bar.dart';
 
 class RoadSignsScreen extends StatefulWidget {
   const RoadSignsScreen({super.key});
@@ -13,15 +15,57 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
   static const Color _screenBg = Color(0xFF1C1C1E);
   int _selectedFilter = 0;
 
-  final List<String> _filters = ['Tất cả', 'Cấm', 'Nguy hiểm', 'Hiệu lệnh', 'Chỉ dẫn'];
+  final List<String> _filters = [
+    'Tất cả',
+    'Cấm',
+    'Nguy hiểm',
+    'Hiệu lệnh',
+    'Chỉ dẫn'
+  ];
 
   final List<_SignCard> _signs = const [
-    _SignCard(name: 'Cấm đi ngược chiều', desc: 'Cấm tất cả các loại xe', shapeColor: Color(0xFFFF453A), shapeType: 'circle', badgeColor: Color(0x33FF453A), badgeText: 'Cấm'),
-    _SignCard(name: 'Đường giao nhau', desc: 'Giao lộ phía trước', shapeColor: Color(0xFFFF453A), shapeType: 'triangle', badgeColor: Color(0x33FF453A), badgeText: 'Nguy hiểm'),
-    _SignCard(name: 'Đi thẳng', desc: 'Bắt buộc đi thẳng', shapeColor: Color(0xFF4A9FD8), shapeType: 'circle', badgeColor: Color(0x334A9FD8), badgeText: 'Hiệu lệnh'),
-    _SignCard(name: 'Đường ưu tiên', desc: 'Xe được quyền ưu tiên', shapeColor: Color(0xFFFFD60A), shapeType: 'diamond', badgeColor: Color(0x33FFD60A), badgeText: 'Ưu tiên'),
-    _SignCard(name: 'STOP', desc: 'Dừng lại nhường đường', shapeColor: Color(0xFFFF453A), shapeType: 'octagon', badgeColor: Color(0x33FF453A), badgeText: 'Cấm'),
-    _SignCard(name: 'Bệnh viện', desc: 'Có bệnh viện phía trước', shapeColor: Color(0xFF4A9FD8), shapeType: 'rect', badgeColor: Color(0x334A9FD8), badgeText: 'Chỉ dẫn'),
+    _SignCard(
+        name: 'Cấm đi ngược chiều',
+        desc: 'Cấm tất cả các loại xe',
+        shapeColor: Color(0xFFFF453A),
+        shapeType: 'circle',
+        badgeColor: Color(0x33FF453A),
+        badgeText: 'Cấm'),
+    _SignCard(
+        name: 'Đường giao nhau',
+        desc: 'Giao lộ phía trước',
+        shapeColor: Color(0xFFFF453A),
+        shapeType: 'triangle',
+        badgeColor: Color(0x33FF453A),
+        badgeText: 'Nguy hiểm'),
+    _SignCard(
+        name: 'Đi thẳng',
+        desc: 'Bắt buộc đi thẳng',
+        shapeColor: Color(0xFF4A9FD8),
+        shapeType: 'circle',
+        badgeColor: Color(0x334A9FD8),
+        badgeText: 'Hiệu lệnh'),
+    _SignCard(
+        name: 'Đường ưu tiên',
+        desc: 'Xe được quyền ưu tiên',
+        shapeColor: Color(0xFFFFD60A),
+        shapeType: 'diamond',
+        badgeColor: Color(0x33FFD60A),
+        badgeText: 'Ưu tiên'),
+    _SignCard(
+        name: 'STOP',
+        desc: 'Dừng lại nhường đường',
+        shapeColor: Color(0xFFFF453A),
+        shapeType: 'octagon',
+        badgeColor: Color(0x33FF453A),
+        badgeText: 'Cấm'),
+    _SignCard(
+        name: 'Bệnh viện',
+        desc: 'Có bệnh viện phía trước',
+        shapeColor: Color(0xFF4A9FD8),
+        shapeType: 'rect',
+        badgeColor: Color(0x334A9FD8),
+        badgeText: 'Chỉ dẫn'),
   ];
 
   @override
@@ -58,7 +102,11 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
                 ),
               ),
             ),
-            _buildTabBar(),
+            AppBottomNavBar(
+              currentIndex: 0,
+              onTabSelected: (index) =>
+                  AppTabNavigation.openTab(context, index, 0),
+            ),
           ],
         ),
       ),
@@ -73,7 +121,9 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('23:32', style: AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.w600)),
+          Text('23:32',
+              style:
+                  AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.w600)),
           const Row(children: [
             Icon(Icons.signal_cellular_alt, color: Colors.white, size: 16),
             SizedBox(width: 6),
@@ -158,9 +208,12 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
         ),
         child: Column(
           children: [
-            Text(value, style: AppTextStyles.h2.copyWith(fontSize: 18, color: color)),
+            Text(value,
+                style: AppTextStyles.h2.copyWith(fontSize: 18, color: color)),
             const SizedBox(height: 4),
-            Text(label, style: AppTextStyles.caption.copyWith(color: const Color(0xFFAEAEB2))),
+            Text(label,
+                style: AppTextStyles.caption
+                    .copyWith(color: const Color(0xFFAEAEB2))),
           ],
         ),
       ),
@@ -180,10 +233,12 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
           _buildShape(sign),
           const SizedBox(height: 6),
           Text(sign.name,
-              style: AppTextStyles.labelSm.copyWith(fontSize: 12, fontWeight: FontWeight.w700)),
+              style: AppTextStyles.labelSm
+                  .copyWith(fontSize: 12, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(sign.desc,
-              style: AppTextStyles.caption.copyWith(color: const Color(0xFFAEAEB2), fontSize: 11)),
+              style: AppTextStyles.caption
+                  .copyWith(color: const Color(0xFFAEAEB2), fontSize: 11)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -193,7 +248,9 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
             ),
             child: Text(sign.badgeText,
                 style: AppTextStyles.caption.copyWith(
-                    color: sign.shapeColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                    color: sign.shapeColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -203,8 +260,10 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
   Widget _buildShape(_SignCard sign) {
     if (sign.shapeType == 'circle') {
       return Container(
-        width: 48, height: 48,
-        decoration: BoxDecoration(color: sign.shapeColor, shape: BoxShape.circle),
+        width: 48,
+        height: 48,
+        decoration:
+            BoxDecoration(color: sign.shapeColor, shape: BoxShape.circle),
       );
     } else if (sign.shapeType == 'triangle') {
       return CustomPaint(
@@ -215,7 +274,8 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
       return Transform.rotate(
         angle: 0.785,
         child: Container(
-          width: 34, height: 34,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
             color: sign.shapeColor,
             borderRadius: BorderRadius.circular(4),
@@ -224,65 +284,30 @@ class _RoadSignsScreenState extends State<RoadSignsScreen> {
       );
     } else if (sign.shapeType == 'octagon') {
       return Container(
-        width: 48, height: 48,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: sign.shapeColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Center(
           child: Text('STOP',
-              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900)),
         ),
       );
     } else {
       return Container(
-        width: 48, height: 36,
+        width: 48,
+        height: 36,
         decoration: BoxDecoration(
           color: sign.shapeColor,
           borderRadius: BorderRadius.circular(6),
         ),
       );
     }
-  }
-
-  Widget _buildTabBar() {
-    const tabs = [
-      _TabItem(icon: Icons.menu_book_rounded, label: 'ÔN THI GPLX'),
-      _TabItem(icon: Icons.star_rounded, label: 'ĐÀO TẠO LÁI XE'),
-      _TabItem(icon: Icons.info_rounded, label: 'THÔNG TIN'),
-    ];
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      color: _cardBg,
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final selected = i == 0;
-          return Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: selected ? AppColors.bgCard : Colors.transparent,
-                borderRadius: BorderRadius.circular(23),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(tabs[i].icon,
-                      color: selected ? AppColors.primary : const Color(0xFFAEAEB2), size: 18),
-                  const SizedBox(height: 4),
-                  Text(tabs[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 10,
-                        color: selected ? AppColors.primary : const Color(0xFFC7C7CC),
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      )),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
   }
 }
 
@@ -299,6 +324,7 @@ class _TrianglePainter extends CustomPainter {
       ..close();
     canvas.drawPath(path, paint);
   }
+
   @override
   bool shouldRepaint(_TrianglePainter old) => old.color != color;
 }
@@ -311,13 +337,11 @@ class _SignCard {
   final Color badgeColor;
   final String badgeText;
   const _SignCard({
-    required this.name, required this.desc, required this.shapeColor,
-    required this.shapeType, required this.badgeColor, required this.badgeText,
+    required this.name,
+    required this.desc,
+    required this.shapeColor,
+    required this.shapeType,
+    required this.badgeColor,
+    required this.badgeText,
   });
-}
-
-class _TabItem {
-  final IconData icon;
-  final String label;
-  const _TabItem({required this.icon, required this.label});
 }

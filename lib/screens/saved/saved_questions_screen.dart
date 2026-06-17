@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/navigation/app_tab_navigation.dart';
 import '../../core/theme/theme.dart';
+import '../../widgets/app_bottom_nav_bar.dart';
 
 class SavedQuestionsScreen extends StatefulWidget {
   const SavedQuestionsScreen({super.key});
@@ -16,7 +18,8 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
   final List<_SavedQuestion> _questions = const [
     _SavedQuestion(
       badge: 'Tốc độ',
-      question: 'Tốc độ tối đa cho phép xe ô tô con đi trên đường cao tốc là bao nhiêu?',
+      question:
+          'Tốc độ tối đa cho phép xe ô tô con đi trên đường cao tốc là bao nhiêu?',
       answer: 'A. 120 km/h',
     ),
     _SavedQuestion(
@@ -31,7 +34,8 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
     ),
     _SavedQuestion(
       badge: 'Kỹ thuật',
-      question: 'Xe ô tô khi đi trên đường phải bật đèn chiếu sáng trong trường hợp nào?',
+      question:
+          'Xe ô tô khi đi trên đường phải bật đèn chiếu sáng trong trường hợp nào?',
       answer: 'C. Từ 19h đến 5h sáng',
     ),
   ];
@@ -57,7 +61,11 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
                 itemBuilder: (_, i) => _buildQuestionCard(_questions[i]),
               ),
             ),
-            _buildTabBar(),
+            AppBottomNavBar(
+              currentIndex: 0,
+              onTabSelected: (index) =>
+                  AppTabNavigation.openTab(context, index, 0),
+            ),
           ],
         ),
       ),
@@ -72,7 +80,9 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('23:32', style: AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.w600)),
+          Text('23:32',
+              style:
+                  AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.w600)),
           const Row(children: [
             Icon(Icons.signal_cellular_alt, color: Colors.white, size: 16),
             SizedBox(width: 6),
@@ -93,10 +103,12 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.chevron_left, color: Colors.white, size: 24),
+            child:
+                const Icon(Icons.chevron_left, color: Colors.white, size: 24),
           ),
           Text('Câu Đã Lưu', style: AppTextStyles.h2.copyWith(fontSize: 18)),
-          const Icon(Icons.delete_outline_rounded, color: AppColors.accentRed, size: 24),
+          const Icon(Icons.delete_outline_rounded,
+              color: AppColors.accentRed, size: 24),
         ],
       ),
     );
@@ -115,7 +127,8 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('48 câu đã lưu',
-                style: AppTextStyles.label.copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
+                style: AppTextStyles.label
+                    .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -143,7 +156,8 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedFilter = i),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: selected ? AppColors.primary : const Color(0xFF3A3A3C),
                   borderRadius: BorderRadius.circular(8),
@@ -174,14 +188,15 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1A3A52),
                   borderRadius: BorderRadius.circular(9999),
                 ),
                 child: Text(q.badge,
-                    style: AppTextStyles.labelSm.copyWith(
-                        color: AppColors.primary, fontSize: 12)),
+                    style: AppTextStyles.labelSm
+                        .copyWith(color: AppColors.primary, fontSize: 12)),
               ),
               const Icon(Icons.bookmark_rounded,
                   color: AppColors.primary, size: 20),
@@ -196,56 +211,15 @@ class _SavedQuestionsScreenState extends State<SavedQuestionsScreen> {
                   color: AppColors.accentGreen, size: 16),
               const SizedBox(width: 6),
               Text(q.answer,
-                  style: AppTextStyles.label.copyWith(
-                      fontSize: 14, color: AppColors.accentGreen)),
+                  style: AppTextStyles.label
+                      .copyWith(fontSize: 14, color: AppColors.accentGreen)),
             ],
           ),
           const SizedBox(height: 4),
           Text('Xem giải thích',
-              style: AppTextStyles.caption.copyWith(
-                  color: const Color(0xFFAEAEB2))),
+              style: AppTextStyles.caption
+                  .copyWith(color: const Color(0xFFAEAEB2))),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    const tabs = [
-      _TabItem(icon: Icons.menu_book_rounded, label: 'ÔN THI GPLX'),
-      _TabItem(icon: Icons.star_rounded, label: 'ĐÀO TẠO LÁI XE'),
-      _TabItem(icon: Icons.info_rounded, label: 'THÔNG TIN'),
-    ];
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      color: _cardBg,
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final selected = i == 0;
-          return Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: selected ? AppColors.bgCard : Colors.transparent,
-                borderRadius: BorderRadius.circular(23),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(tabs[i].icon,
-                      color: selected ? AppColors.primary : const Color(0xFFAEAEB2),
-                      size: 18),
-                  const SizedBox(height: 4),
-                  Text(tabs[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 10,
-                        color: selected ? AppColors.primary : const Color(0xFFC7C7CC),
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                      )),
-                ],
-              ),
-            ),
-          );
-        }),
       ),
     );
   }
@@ -255,11 +229,6 @@ class _SavedQuestion {
   final String badge;
   final String question;
   final String answer;
-  const _SavedQuestion({required this.badge, required this.question, required this.answer});
-}
-
-class _TabItem {
-  final IconData icon;
-  final String label;
-  const _TabItem({required this.icon, required this.label});
+  const _SavedQuestion(
+      {required this.badge, required this.question, required this.answer});
 }
